@@ -80,9 +80,9 @@ The `list` target exists to examine, and possibly debug, our work via helm.
 There are a few more namespaces and repos in that makefile than we'll use immediately in this lab. They are for future expansion.
 
 ### Installing Consul
-We will install consul from the official helm chart, with the following values
+We will install consul from the official helm chart, with the following values which are in kept in the `helm` directory:
 
-**`consul-values.yaml`**
+**`helm/consul-values.yaml`**
 ```yaml
 global:
   name: consul
@@ -127,7 +127,7 @@ We give the consul installation commands via make, as usual. Add the following t
 install: install-consul
 
 install-consul:
-	helm install consul hashicorp/consul -f consul-values.yaml -n consul | tee -a output.log
+	helm install consul hashicorp/consul -f helm/consul-values.yaml -n consul | tee -a output.log
 
 delete-consul:
 	helm delete -n consul consul
@@ -143,7 +143,7 @@ Before you run `make install` you'll have to run `make init` to create the requi
 
 We need values files for both of these components:
 
-**`prometheus-values.yaml`**
+**`helm/prometheus-values.yaml`**
 ```yaml
 server:
   persistentVolume:
@@ -156,7 +156,7 @@ We are disabling the alert manager because we're not using it for this lab. In a
 
 Also, because this is a lab environment, we're not going to need to persist prometheus' data for later, so we're disabling the persistent volume capability.
 
-**`grafana-values.yaml`**
+**`helm/grafana-values.yaml`**
 ```yaml
 adminUser: wibble
 adminPassword: "pleasechangethispassword.IthasbeencommittedincleartexttoGitHut."
@@ -182,14 +182,13 @@ We have exposed a NodePort to make using the service a little easier, and set th
 install: install-consul install-prometheus install-grafana
 
 install-prometheus:
-	helm install -f prometheus-values.yaml prometheus prometheus-community/prometheus -n prograf | tee -a output.log
+	helm install -f helm/prometheus-values.yaml prometheus prometheus-community/prometheus -n prograf | tee -a output.log
 
 delete-prometheus:
 	helm delete -n prograf prometheus
-	helm delete -n prograf prometheus-consul-exporter
 
 install-grafana:
-	helm install -f grafana-values.yaml grafana grafana/grafana -n prograf | tee -a output.log
+	helm install -f helm/grafana-values.yaml grafana grafana/grafana -n prograf | tee -a output.log
 
 delete-grafana:
 	helm delete -n prograf grafana
