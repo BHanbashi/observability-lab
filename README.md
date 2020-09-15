@@ -17,7 +17,9 @@ Use Grafana to observe Consul-Connect service-mesh metrics collected by Promethe
 5. Start a traffic simulation deployment, and observe the application traffic in Grafana.
 
 ### Pre-requites…
-Most people can run this on their laptops, and if you can then this is the recommended approach. If your laptop runs out of steam, try it on Sandbox. You'll need docker, helm, and kubectl installed. The already exist in the sandbox, but you might have to install them onto your local machines if you are running the lab there.
+Most people can run this on their laptops, and if you can then this is the recommended approach. If your laptop runs out of steam, try it on Sandbox. 
+
+You'll need `curl, jq, vim, git, make, docker, helm, and kubectl` installed. These tools already exist in the sandbox, but you might have to install them onto your local machines if you are running the lab there. They generally useful for everything we're doing anyway, so why not?
 
 ## Let's start making things
 
@@ -71,9 +73,11 @@ namespaces:
 
 > Note: If you intend to copy & paste this text in vim, watch out for transcription errors, especially with quote marks.
 
-Running `make` or `make cluster` will create a k3d cluster capable of running this lab. You are all familiar with makefiles so we won’t delve into this file any further, but we will be adding more to it as we proceed. Note though that we have asked K3D not to install `Traefik` as an ingress controller. We will use `ingress-nginx` for this lab.
+Running `make` or `make cluster` will create a k3d cluster capable of running this lab. You are all familiar with makefiles so we won’t delve into this file any further, but we will be adding more to it as we proceed. Note though that we have asked K3D not to install `Traefik` as an ingress controller. We will use `ingress-nginx` for this lab if necessary.
 
 The `list` target exists to examine, and possibly debug, our work via helm.
+
+There are a few more namespaces and repos in that makefile than we'll use immediately in this lab. They are for future expansion.
 
 ### Installing Consul
 We will install consul from the official helm chart, with the following values
@@ -154,8 +158,8 @@ Also, because this is a lab environment, we're not going to need to persist prom
 
 **`grafana-values.yaml`**
 ```yaml
-adminUser: admin
-adminPassword: password
+adminUser: wibble
+adminPassword: "pleasechangethispassword.IthasbeencommittedincleartexttoGitHut."
 
 datasources:
   datasources.yaml:
@@ -169,22 +173,13 @@ datasources:
 service:
   type: NodePort
   targetPort: 3000
-ingress:
-  enabled: true
-  annotations:
-    kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/rewrite-target: /
-  labels: {}
-  hosts: [""]
-  path: /grafana
-
 ```
 
-We have exposed a NodePort to make using the service a little easier.
+We have exposed a NodePort to make using the service a little easier, and set the admin user and password to a static value to make using it easy.
 
 **`Makefile`**
 ```makefile
-install: install-consul install-ingress-nginx install-prometheus install-grafana
+install: install-consul install-prometheus install-grafana
 
 install-prometheus:
 	helm install -f prometheus-values.yaml prometheus prometheus-community/prometheus -n prograf | tee -a output.log
@@ -202,6 +197,69 @@ delete-grafana:
 
 > *Please, change the `install` target rather than creating a new one*
 
+---
+
+### Demo App
+Included in the `demo-app` folder are the manifests for a Hashicorp app used for demonstrations (hence the name) called **HashiCup**: ***an application that emulates an online order app for a coffee shop***. For this lab, the app includes a `React` front end, a `GraphQL` API, a REST API and a `Postgres` database.
+
+Examine the `demo-app/frontend.yaml` file. It contains the following prometheus configuration:
+
+```yaml
+prometheus.io/scrape: 'true'
+prometheus.io/port: '9102'
+```
+
+We have applied the same config to the other objects/resources/manifes in the app. You'll have to do something similar in your apps if you want the same behaviour. This allows Prometheus to discover resources in the K8S cluster that should be exposing metrics (data producers), and tells Prometheus what port to the metrics are exposed at. The proxyDefaults entry in the `consul-values.yaml` file that you created earlier, along with the envoy_prometheus_bind_addr (0.0.0.0:9102), is configuring the data consumer (sink). You configured Consul and Envoy to publish metrics on port 9102, and now you have configured  Prometheus to subscribe on each proxy at port 9102.
+
+We have deployed this to the `default` namespace. Use `kubectl get services` to find the port we have exposed the frontend on and navigate to it your browser. This will be on localhost if you're running this locally, or on your ec2 instance's public-ip if you're running in the sandbox.
+
+You can scroll the coffee cup left and right and pay for it with a mock fingerprint-scanner. It's not a very complicated app really.
+
+![HashiCup](https://learn.hashicorp.com/img/consul-hashicups-frontend.png)
+
+
+Now, let's confirm that consul did configure Envoy to publish metrics on port 9102. The Envoy side-car proxy can be reached at port 19000. Open a new terminal, and issue the following command:
+
+```bash
+kubectl port-forward deploy/frontend 19000:19000
+```
+
+Then in a different terminal (on the same machine, obvs.):
+
+```bash
+curl localhost:19000/config_dump | jq -C '.' | less -R
+```
+
+This should return a really long json file. Search it for 9102 -- there should be 2 entries for it.
+
+> **Hint**: use <kbd>/</kbd> while viewing the output in `less` to search for that and you can use <kbd>j</kbd> and <kbd>k</kbd> like in `vim` in order to scroll up and down 
+
+
+The configuration matches the configuration in the `proxyDefaults` entry in the `consul-values.yaml` file. This shows that Consul has configured Envoy to publish Prometheus metrics. You can stop the port-forwarder now (<kbd>ctrl</kbd>+<kbd>c</kbd>)
+
+### Simulate Traffic
+
+
+
+
+---
+
+
+.
+
+.
+
+.
+
+.
+
+.
+
+.
+
+.
+
+
 
 
 
@@ -210,7 +268,7 @@ delete-grafana:
 ---
 
 
-## Extra Credits:- Making Ingress Work
+# Extra Credits:- Making Ingress Work
 ### Installing ingress-nginx
 We will need the following values:
 
@@ -252,4 +310,18 @@ install-ingress-nginx:
 
 delete-ingress-nginx:
 	helm delete ingress-nginx
+```
+
+Add an ingress block to grafana-values.yaml
+**`grafana-values.yaml`**
+```yaml
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  labels: {}
+  hosts: [""]
+  path: /grafana
+
 ```
