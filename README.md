@@ -237,7 +237,14 @@ This should return a really long json file. Search it for 9102 -- there should b
 The configuration matches the configuration in the `proxyDefaults` entry in the `consul-values.yaml` file. This shows that Consul has configured Envoy to publish Prometheus metrics. You can stop the port-forwarder now (<kbd>ctrl</kbd>+<kbd>c</kbd>)
 
 ### Simulate Traffic
+If you change to the branch `traffic` you'll find a new file in the root called `traffic.yaml`. It's too long to post here so I've just given it to you verbatim. Don't confuse this with Traefik, the ingress controller that ships by default with K3S as they are totally different things.
 
+### Lies, Damn Lies, and Statistics
+Envoy exposes a huge amount of metrics. Which ones you want to see is an application and task specific issue.
+
+For now we have preconfigured a Grafana dashboard with a couple of basic metrics, but you should systematically consider what others you will need to collect as you move from testing into production.
+
+You'll find the grafana 
 
 
 
