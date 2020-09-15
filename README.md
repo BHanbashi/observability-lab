@@ -27,6 +27,8 @@ You will progress faster if you use a makefile for your commands. Start with the
 
 **`Makefile`**
 ```makefile
+.PHONY: up down cluster install list
+
 all: up install
 
 up: init cluster
@@ -248,6 +250,7 @@ For now we have preconfigured a Grafana dashboard with a couple of basic metrics
 
 You'll find the grafana dashboard spec in the file `hashicups-dashboard.json`, also in the `traffic` branch. You can go back to the grafana tab in your browser now. Hit the big **+** symbol on the left and select **import**, then hit the big blue **Upload JSON file** button and select the `hashicups-dashboard.json` we mentioned at the top of this paragraph. Alternatively, you might get away with pasting the contents of that file in the tiny little text box they've provided for lamers who can't download/upload a file :)
 
+---
 # Retrospective
 In this lab, you set up layer 7 metrics collection and visualization in a Kuberenetes cluster using Consul service mesh, Prometheus, and Grafana, all deployed via Helm charts. Specifically, you:
 
