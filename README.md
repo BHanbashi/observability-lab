@@ -19,7 +19,7 @@ Use Grafana to observe Consul-Connect service-mesh metrics collected by Promethe
 ### Pre-requites…
 Most people can run this on their laptops, and if you can then this is the recommended approach. If your laptop runs out of steam, try it on Sandbox. You'll need docker, helm, and kubectl installed. The already exist in the sandbox, but you might have to install them onto your local machines if you are running the lab there.
 
-## Getting started
+## Let's start making things
 
 You will progress faster if you use a makefile for your commands. Start with the following and we'll add more to it as we progress:
 
@@ -75,7 +75,7 @@ Running `make` or `make cluster` will create a k3d cluster capable of running th
 
 The `list` target exists to examine, and possibly debug, our work via helm.
 
-## Installing Consul
+### Installing Consul
 We will install consul from the official helm chart, with the following values
 
 **`consul-values.yaml`**
@@ -135,3 +135,121 @@ Before you run `make install` you'll have to run `make init` to create the requi
 
 > This is a lab quality consul installation. For production hardening, please review [Secure Consul on K8S](https://learn.hashicorp.com/tutorials/consul/kubernetes-secure-agents)
 
+### Installing Prometheus & Grafana
+
+We need values files for both of these components:
+
+**`prometheus-values.yaml`**
+```yaml
+server:
+  persistentVolume:
+    enabled: false
+alertmanager:
+  enabled: false
+```
+
+We are disabling the alert manager because we're not using it for this lab. In a production environment you would want alerts enabled and you would want to configure them to let you know via email, slack, and other more formal and continuosly monitored channels (ServiceNow for example) if there is any kind of systemic outage that you need to attend to.
+
+Also, because this is a lab environment, we're not going to need to persist prometheus' data for later, so we're disabling the persistent volume capability.
+
+**`grafana-values.yaml`**
+```yaml
+adminUser: admin
+adminPassword: password
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://prometheus-server
+      access: proxy
+      isDefault: true
+service:
+  type: NodePort
+  targetPort: 3000
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  labels: {}
+  hosts: [""]
+  path: /grafana
+
+```
+
+We have exposed a NodePort to make using the service a little easier.
+
+**`Makefile`**
+```makefile
+install: install-consul install-ingress-nginx install-prometheus install-grafana
+
+install-prometheus:
+	helm install -f prometheus-values.yaml prometheus prometheus-community/prometheus -n prograf | tee -a output.log
+
+delete-prometheus:
+	helm delete -n prograf prometheus
+	helm delete -n prograf prometheus-consul-exporter
+
+install-grafana:
+	helm install -f grafana-values.yaml grafana grafana/grafana -n prograf | tee -a output.log
+
+delete-grafana:
+	helm delete -n prograf grafana
+```
+
+> *Please, change the `install` target rather than creating a new one*
+
+
+
+
+
+
+---
+
+
+## Extra Credits:- Making Ingress Work
+### Installing ingress-nginx
+We will need the following values:
+
+**`ingress-nginx-values.yaml`**
+```yaml
+controller:
+  resources:
+    limits:
+      cpu: 100m
+      memory: 90Mi
+    requests:
+      cpu: 100m
+      memory: 90Mi
+
+  metrics:
+    port: 10254
+    enabled: true
+
+    service:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "10254"
+
+    serviceMonitor:
+      enabled: true
+        namespaceSelector:
+          any: true
+      scrapeInterval: 30s
+```
+
+And we should add the following to the `Makefile`:
+
+**`Makefile`**
+```makefile
+install: install-consul install-ingress-nginx
+
+install-ingress-nginx:
+	helm install ingress-nginx ingress-nginx/ingress-nginx -f ingress-nginx-values.yaml | tee -a output.log
+
+delete-ingress-nginx:
+	helm delete ingress-nginx
+```
