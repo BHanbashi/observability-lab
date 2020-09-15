@@ -244,7 +244,7 @@ Envoy exposes a huge amount of metrics. Which ones you want to see is an applica
 
 For now we have preconfigured a Grafana dashboard with a couple of basic metrics, but you should systematically consider what others you will need to collect as you move from testing into production.
 
-You'll find the grafana 
+You'll find the grafana dashboard spec in the file `hashicups-dashboard.json`, also in the `traffic` branch.
 
 
 

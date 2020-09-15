@@ -1,0 +1,23 @@
+controller:
+  resources:
+    limits:
+      cpu: 100m
+      memory: 90Mi
+    requests:
+      cpu: 100m
+      memory: 90Mi
+
+  metrics:
+    port: 10254
+    enabled: true
+
+    service:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "10254"
+
+    serviceMonitor:
+      enabled: true
+        namespaceSelector:
+          any: true
+      scrapeInterval: 30s

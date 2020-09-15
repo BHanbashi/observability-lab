@@ -1,0 +1,14 @@
+server:
+  dev:
+    enabled: true
+  image:
+    tag: "latest"
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: "traefik"
+  hosts:
+  - host: localhost
+    path: /vault
+ui:
+  enabled: true
