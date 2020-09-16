@@ -11,10 +11,10 @@ Use Grafana to observe Consul-Connect service-mesh metrics collected by Promethe
 
 ### Still What?
 1. Configure Consul to expose Envoy metrics to Prometheus
-2. Deploy Consul using the official helm chart.
-3. Deploy Prometheus and Grafana using their official Helm charts.
-4. Deploy a multi-tier demo application that is configured to be scraped by Prometheus.
-5. Start a traffic simulation deployment, and observe the application traffic in Grafana.
+2. Deploy Consul using the official helm chart
+3. Deploy Prometheus and Grafana using their official Helm charts
+4. Deploy a multi-tier demo application that is configured to be scraped by Prometheus
+5. Start a traffic simulation deployment, and observe the application traffic in Grafana
 
 ### Pre-requites…
 Most people can run this on their laptops, and if you can then this is the recommended approach. If your laptop runs out of steam, try it on Sandbox. 
@@ -27,6 +27,8 @@ You will progress faster if you use a makefile for your commands. Start with the
 
 **`Makefile`**
 ```makefile
+.PHONY: up down cluster install list
+
 all: up install
 
 up: init cluster
@@ -196,6 +198,8 @@ delete-grafana:
 
 > *Please, change the `install` target rather than creating a new one*
 
+You can use `kubectl` to find grafana's service NodePort and use this to navigate to grafana in a browser. You should login and keep the page open as you'll need it soon.
+
 ---
 
 ### Demo App
@@ -237,97 +241,25 @@ This should return a really long json file. Search it for 9102 -- there should b
 The configuration matches the configuration in the `proxyDefaults` entry in the `consul-values.yaml` file. This shows that Consul has configured Envoy to publish Prometheus metrics. You can stop the port-forwarder now (<kbd>ctrl</kbd>+<kbd>c</kbd>)
 
 ### Simulate Traffic
-If you change to the branch `traffic` you'll find a new file in the root called `traffic.yaml`. It's too long to post here so I've just given it to you verbatim. Don't confuse this with Traefik, the ingress controller that ships by default with K3S as they are totally different things.
+We have a tool, also from Hashi, that will generate traffic for the HashiCup application. Strangely enough this is called *Traffic*. Don't confuse this with Traefik, the ingress controller that ships by default with K3S as they are totally different things.
+
+If you change to the branch `traffic` you'll find a new file in the root called `traffic.yaml`. It's too long to post here so I've just given it to you to use directly. 
+
+When you apply this file to kubernetes it will immediately start exercising the components of the demo-app to generate traffic that we can monitor with Consul, Prometheus, and Grafana.
 
 ### Lies, Damn Lies, and Statistics
 Envoy exposes a huge amount of metrics. Which ones you want to see is an application and task specific issue.
 
 For now we have preconfigured a Grafana dashboard with a couple of basic metrics, but you should systematically consider what others you will need to collect as you move from testing into production.
 
-You'll find the grafana 
-
-
+You'll find the grafana dashboard spec in the file `hashicups-dashboard.json`, also in the `traffic` branch. You can go back to the grafana tab in your browser now. Hit the big **+** symbol on the left and select **import**, then hit the big blue **Upload JSON file** button and select the `hashicups-dashboard.json` we mentioned at the top of this paragraph. Alternatively, you might get away with pasting the contents of that file in the tiny little text box they've provided for lamers who can't download/upload a file :)
 
 ---
+# Retrospective
+In this lab, you set up layer 7 metrics collection and visualization in a Kuberenetes cluster using Consul service mesh, Prometheus, and Grafana, all deployed via Helm charts. Specifically, you:
 
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-
-
-
-
-
-
----
-
-
-# Extra Credits:- Making Ingress Work
-### Installing ingress-nginx
-We will need the following values:
-
-**`ingress-nginx-values.yaml`**
-```yaml
-controller:
-  resources:
-    limits:
-      cpu: 100m
-      memory: 90Mi
-    requests:
-      cpu: 100m
-      memory: 90Mi
-
-  metrics:
-    port: 10254
-    enabled: true
-
-    service:
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "10254"
-
-    serviceMonitor:
-      enabled: true
-        namespaceSelector:
-          any: true
-      scrapeInterval: 30s
-```
-
-And we should add the following to the `Makefile`:
-
-**`Makefile`**
-```makefile
-install: install-consul install-ingress-nginx
-
-install-ingress-nginx:
-	helm install ingress-nginx ingress-nginx/ingress-nginx -f ingress-nginx-values.yaml | tee -a output.log
-
-delete-ingress-nginx:
-	helm delete ingress-nginx
-```
-
-Add an ingress block to grafana-values.yaml
-**`grafana-values.yaml`**
-```yaml
-ingress:
-  enabled: true
-  annotations:
-    kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/rewrite-target: /
-  labels: {}
-  hosts: [""]
-  path: /grafana
-
-```
+1. Configured Consul and Envoy to expose application metrics to Prometheus
+2. Deployed Consul using the official helm chart
+3. Deployed Prometheus and Grafana using their official Helm charts
+4. Deployed a multi-tier demo application that was configured to be scraped by Prometheus
+5. Started a traffic simulation deployment, and observed the metrics in Grafana
