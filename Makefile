@@ -48,33 +48,31 @@ delete-demo-app:
 	kubectl delete -f demo-app
 
 install-consul:
-	helm install consul hashicorp/consul -f consul-values.yaml -n consul | tee -a output.log
+	helm install consul hashicorp/consul -f helm/consul-values.yaml -n consul | tee -a output.log
 
 delete-consul:
 	helm delete -n consul consul
 
 install-vault:
-	helm install vault hashicorp/vault -f vault-values.yaml -n vault | tee -a output.log
+	helm install vault hashicorp/vault -f helm/vault-values.yaml -n vault | tee -a output.log
 
 delete-vault:
 	helm delete -n vault vault
 
 install-ingress-nginx:
-	helm install ingress-nginx ingress-nginx/ingress-nginx -f ingress-nginx-values.yaml | tee -a output.log
+	helm install ingress-nginx ingress-nginx/ingress-nginx -f helm/ingress-nginx-values.yaml | tee -a output.log
 
 delete-ingress-nginx:
 	helm delete ingress-nginx
 
 install-prometheus:
-	helm install -f prometheus-values.yaml prometheus prometheus-community/prometheus -n prograf | tee -a output.log
-	helm install -f prometheus-values.yaml prometheus-consul-exporter prometheus-community/prometheus-consul-exporter -n prograf | tee -a output.log
+	helm install -f helm/prometheus-values.yaml prometheus prometheus-community/prometheus -n prograf | tee -a output.log
 
 delete-prometheus:
 	helm delete -n prograf prometheus
-	helm delete -n prograf prometheus-consul-exporter
 
 install-grafana:
-	helm install -f grafana-values.yaml grafana grafana/grafana -n prograf | tee -a output.log
+	helm install -f helm/grafana-values.yaml grafana grafana/grafana -n prograf | tee -a output.log
 
 delete-grafana:
 	helm delete -n prograf grafana

@@ -16,8 +16,3 @@ controller:
         prometheus.io/scrape: "true"
         prometheus.io/port: "10254"
 
-    serviceMonitor:
-      enabled: true
-        namespaceSelector:
-          any: true
-      scrapeInterval: 30s
