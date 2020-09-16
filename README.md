@@ -263,3 +263,18 @@ In this lab, you set up layer 7 metrics collection and visualization in a Kubere
 3. Deployed Prometheus and Grafana using their official Helm charts
 4. Deployed a multi-tier demo application that was configured to be scraped by Prometheus
 5. Started a traffic simulation deployment, and observed the metrics in Grafana
+
+---
+# Lab Extension
+
+# Nginx Ingress controller
+
+The Nginx ingress controller is perhaps the most popular in the inudstry. You're going to add it to this application to expose the Grafana dashboard.
+
+The `nginx` branch has the necessary files. Unlike the previous half of the lab, you're not getting any more help with this one. I have provided the nginx installation commands in the makefile, and a values file that you can get started with.
+
+I will give you 2 clues though -- you can google for the answer, and:
+
+```bash
+helm show values ingress-nginx/ingress-nginx
+```
