@@ -31,7 +31,7 @@ You will progress faster if you use a makefile for your commands. Start with the
 
 all: up install
 
-up: init cluster
+up: cluster init
 
 down:
 	k3d cluster delete labs
