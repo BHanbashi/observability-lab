@@ -39,7 +39,7 @@ cluster:
 	    --k3s-server-arg '--no-deploy=traefik' \
 	    --agents 3
 
-install: install-consul install-vault install-ingress-nginx install-prometheus install-grafana install-demo-app
+install: install-grafana install-ingress-nginx install-prometheus install-consul install-vault install-demo-app
 
 install-demo-app:
 	kubectl apply -f demo-app
