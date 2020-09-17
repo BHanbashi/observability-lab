@@ -1,4 +1,4 @@
-adminUser: admin
+nUser: admin
 adminPassword: password
 
 datasources:
@@ -23,4 +23,5 @@ ingress:
   hosts: [""]
 grafana.ini:
   server:
-    root_url: http://localhost/graf 
+    #root_url: http://15.185.207.251/graf 
+    root_url: http://localhost/graf
