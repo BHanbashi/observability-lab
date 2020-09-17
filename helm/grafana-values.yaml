@@ -23,4 +23,4 @@ ingress:
   hosts: [""]
 grafana.ini:
   server:
-    root_url: http://localhost/graf 
+    root_url: http://wibble/graf 
