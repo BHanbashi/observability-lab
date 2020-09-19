@@ -39,7 +39,7 @@ cluster:
 	    --k3s-server-arg '--no-deploy=traefik' \
 	    --agents 3
 
-install: install-grafana install-ingress-nginx install-prometheus install-consul install-vault install-demo-app
+install: install-consul install-vault install-grafana install-ingress-nginx install-prometheus install-demo-app
 
 install-demo-app:
 	kubectl apply -f demo-app
@@ -49,6 +49,7 @@ delete-demo-app:
 
 install-consul:
 	helm install consul hashicorp/consul -f helm/consul-values.yaml -n consul | tee -a output.log
+	sleep 60
 
 delete-consul:
 	helm delete -n consul consul
@@ -60,11 +61,9 @@ delete-vault:
 	helm delete -n vault vault
 
 install-ingress-nginx:
-	helm install ingress-nginx ingress-nginx/ingress-nginx -f helm/ingress-nginx-values.yaml | tee -a output.log
-
+	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-0.32.0/deploy/static/provider/cloud/deploy.yaml | tee -a output.log
 delete-ingress-nginx:
-	helm delete ingress-nginx
-
+	kubectl delete -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-0.32.0/deploy/static/provider/cloud/deploy.yaml | tee -a output.log
 install-prometheus:
 	helm install -f helm/prometheus-values.yaml prometheus prometheus-community/prometheus -n prograf | tee -a output.log
 
